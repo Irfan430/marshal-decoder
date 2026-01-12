@@ -139,22 +139,31 @@ class TerminalUI:
 # ==================== CORE DECODER ENGINE ====================
 class XproDecoder:
 
-    def safe_extract(self, extractor, file_path):
-        try:
-            return extractor(file_path)
-        except Exception as e:
-            self.logger.warning(f"Extractor failed: {e}")
-            return None
-    
     def extract_via_ast(self, file_path):
-        """AST-based extractor (fallback-safe).
-        Currently routes to regex extractor if AST logic is unavailable.
-        """
+        """Auto-added fallback for missing extractor."""
         try:
-            self.logger.info("AST extractor active (fallback mode)")
+            self.logger.info("extract_via_ast not implemented, falling back to regex")
             return self.extract_via_regex(file_path)
         except Exception as e:
-            self.logger.error(f"AST fallback failed: {e}")
+            self.logger.error(f"extract_via_ast fallback failed: {e}")
+            return None
+    
+    def extract_via_bruteforce(self, file_path):
+        """Auto-added fallback for missing extractor."""
+        try:
+            self.logger.info("extract_via_bruteforce not implemented, falling back to regex")
+            return self.extract_via_regex(file_path)
+        except Exception as e:
+            self.logger.error(f"extract_via_bruteforce fallback failed: {e}")
+            return None
+    
+    def extract_via_heuristics(self, file_path):
+        """Auto-added fallback for missing extractor."""
+        try:
+            self.logger.info("extract_via_heuristics not implemented, falling back to regex")
+            return self.extract_via_regex(file_path)
+        except Exception as e:
+            self.logger.error(f"extract_via_heuristics fallback failed: {e}")
             return None
     
     def __init__(self):
