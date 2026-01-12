@@ -121,7 +121,7 @@ install_system_deps() {
 create_requirements() {
     echo -e "\n${CYAN}[*] Creating optimized requirements...${RESET}"
     
-    cat > requirements.txt << 'EOF'
+    cat > requirements.txt << 'REQ_EOF'
 # XPRO NEXUS DECODER - Optimized Requirements
 # Python 3.7-3.13 compatible
 
@@ -161,7 +161,7 @@ pytest>=7.0.0    # Testing
 # scikit-learn>=1.2.0
 # torch>=2.0.0
 # tensorflow>=2.12.0
-EOF
+REQ_EOF
     
     echo -e "${GREEN}[+] Created requirements.txt${RESET}"
 }
@@ -260,7 +260,7 @@ configure_decoder() {
     chmod +x xpro_decoder.py
     
     # Create config file
-    cat > config.json << EOF
+    cat > config.json << CONFIG_EOF
 {
     "version": "10.1",
     "author": "XPRO-NEXUS",
@@ -277,15 +277,15 @@ configure_decoder() {
         "auto_update": true
     }
 }
-EOF
+CONFIG_EOF
     
     # Create run scripts
-    cat > run.sh << 'EOF'
+    cat > run.sh << RUN_EOF
 #!/bin/bash
 # XPRO NEXUS DECODER - Run Script
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd "$SCRIPT_DIR"
+SCRIPT_DIR="\$( cd "\$( dirname "\${BASH_SOURCE[0]}" )" && pwd )"
+cd "\$SCRIPT_DIR"
 
 echo "🚀 Starting XPRO NEXUS DECODER v10.1"
 echo "========================================"
@@ -301,25 +301,25 @@ else
 fi
 
 # Check Python version
-PY_VERSION=$(python3 --version 2>&1 | cut -d' ' -f2)
-echo "[*] Python $PY_VERSION detected"
+PY_VERSION=\$(python3 --version 2>&1 | cut -d' ' -f2)
+echo "[*] Python \$PY_VERSION detected"
 
 # Run the decoder
 python3 xpro_decoder.py
 
 # Deactivate venv if activated
-if [[ "$IN_VENV" = true ]]; then
+if [[ "\$IN_VENV" = true ]]; then
     deactivate 2>/dev/null
 fi
 
 echo "========================================"
 echo "✅ XPRO NEXUS DECODER finished"
-EOF
+RUN_EOF
     
     chmod +x run.sh
     
     # Create quick test script
-    cat > test_decoder.sh << 'EOF'
+    cat > test_decoder.sh << TEST_EOF
 #!/bin/bash
 # Test script for XPRO Decoder
 
@@ -345,16 +345,16 @@ fi
 # Test 3: Check imports
 echo "Testing imports..."
 IMPORTS=("marshal" "dis" "ast" "re")
-for imp in "${IMPORTS[@]}"; do
-    if python3 -c "import $imp" &>/dev/null; then
-        echo "  ✓ $imp"
+for imp in "\${IMPORTS[@]}"; do
+    if python3 -c "import \$imp" &>/dev/null; then
+        echo "  ✓ \$imp"
     else
-        echo "  ✗ $imp"
+        echo "  ✗ \$imp"
     fi
 done
 
 # Test 4: Create test file
-cat > test_marshal.py << 'TEST'
+cat > test_marshal.py << 'INNER_TEST'
 import marshal
 code = compile('print("Hello from XPRO!")', '<string>', 'exec')
 data = marshal.dumps(code)
@@ -362,7 +362,7 @@ print(f"Created test marshal data: {len(data)} bytes")
 with open('test.marshal', 'wb') as f:
     f.write(data)
 print("Test file saved: test.marshal")
-TEST
+INNER_TEST
 
 python3 test_marshal.py
 rm -f test_marshal.py
@@ -370,20 +370,230 @@ rm -f test_marshal.py
 echo "========================================"
 echo "✅ All tests passed!"
 echo "Run './run.sh' to start the decoder"
-EOF
+TEST_EOF
     
     chmod +x test_decoder.sh
     
     # Create examples
     mkdir -p examples
-    cat > examples/README.md << 'EOF'
+    cat > examples/README.md << EXAMPLES_EOF
 # XPRO NEXUS DECODER - Examples
 
 ## Example Files
 
 ### 1. Basic Marshal File
-```python
+\`\`\`python
 # basic_encrypted.py
 import marshal
 code = compile('print("Hello World")', '<string>', 'exec')
 exec(marshal.loads(marshal.dumps(code)))
+\`\`\`
+
+### 2. Function Marshal
+\`\`\`python
+# function_encrypted.py
+import marshal
+
+def secret_function():
+    print("This is a secret function!")
+    return 42
+
+# Marshal the function
+code = secret_function.__code__
+data = marshal.dumps(code)
+
+# Save to file
+with open('function.marshal', 'wb') as f:
+    f.write(data)
+\`\`\`
+
+## Usage
+1. Create an encrypted file
+2. Run: \`python xpro_decoder.py\`
+3. Select your file
+4. Check output in XPRO_OUTPUT_*/ directory
+EXAMPLES_EOF
+    
+    echo -e "${GREEN}[+] Configuration complete${RESET}"
+}
+
+# Post-installation setup
+post_install() {
+    echo -e "\n${CYAN}[*] Running post-installation steps...${RESET}"
+    
+    # Create update script
+    cat > update.sh << UPDATE_EOF
+#!/bin/bash
+# XPRO NEXUS DECODER - Update Script
+
+echo "🔄 Updating XPRO NEXUS DECODER..."
+echo "========================================"
+
+# Update from git if available
+if [[ -d ".git" ]]; then
+    echo "[*] Updating from Git repository..."
+    git pull origin main
+    if [[ \$? -eq 0 ]]; then
+        echo "✓ Git update successful"
+    else
+        echo "⚠ Git update failed (not a git repo?)"
+    fi
+fi
+
+# Update Python packages
+if [[ -d "venv" ]]; then
+    echo "[*] Updating Python packages..."
+    source venv/bin/activate
+    
+    # Check OS for installation method
+    if [[ -f /etc/os-release ]] && grep -q "Kali" /etc/os-release; then
+        pip install --upgrade -r requirements.txt --break-system-packages
+    else
+        pip install --upgrade -r requirements.txt
+    fi
+    
+    deactivate
+    echo "✓ Packages updated"
+else
+    echo "⚠ Virtual environment not found"
+    echo "  Run the installer again to create venv"
+fi
+
+echo "========================================"
+echo "✅ Update complete!"
+UPDATE_EOF
+    
+    chmod +x update.sh
+    
+    # Create uninstall script
+    cat > uninstall.sh << UNINSTALL_EOF
+#!/bin/bash
+# XPRO NEXUS DECODER - Uninstall Script
+
+echo "🗑️  Uninstalling XPRO NEXUS DECODER..."
+echo "========================================"
+
+read -p "Are you sure? This will remove all decoder files. (y/N): " -n 1 -r
+echo
+if [[ ! \$REPLY =~ ^[Yy]\$ ]]; then
+    echo "Uninstall cancelled."
+    exit 0
+fi
+
+echo "[*] Removing virtual environment..."
+rm -rf venv
+
+echo "[*] Removing configuration files..."
+rm -f config.json requirements.txt
+
+echo "[*] Removing scripts..."
+rm -f run.sh update.sh test_decoder.sh uninstall.sh
+
+echo "[*] Removing generated outputs..."
+rm -rf XPRO_OUTPUT_* xpro_decoder_*.log
+
+echo "[*] Cleaning up..."
+rm -rf __pycache__ *.pyc
+
+echo "========================================"
+echo "✅ XPRO NEXUS DECODER has been uninstalled"
+echo "Note: Your decoded files are preserved"
+UNINSTALL_EOF
+    
+    chmod +x uninstall.sh
+}
+
+# Show installation summary
+show_summary() {
+    echo -e "\n${GREEN}========================================${RESET}"
+    echo -e "${GREEN}✅ XPRO NEXUS DECODER INSTALLATION COMPLETE!${RESET}"
+    echo -e "${GREEN}========================================${RESET}"
+    
+    echo -e "\n${CYAN}📦 INSTALLATION SUMMARY:${RESET}"
+    echo -e "${WHITE}• Operating System:${RESET} ${GREEN}$OS $VER${RESET}"
+    echo -e "${WHITE}• Python Version:${RESET} ${GREEN}$($PYTHON_CMD --version)${RESET}"
+    echo -e "${WHITE}• Virtual Environment:${RESET} ${GREEN}venv/${RESET}"
+    echo -e "${WHITE}• Main Decoder:${RESET} ${GREEN}xpro_decoder.py${RESET}"
+    echo -e "${WHITE}• Configuration:${RESET} ${GREEN}config.json${RESET}"
+    echo -e "${WHITE}• Run Script:${RESET} ${GREEN}run.sh${RESET}"
+    
+    echo -e "\n${MAGENTA}🚀 QUICK START COMMANDS:${RESET}"
+    echo -e "${WHITE}1. Run the decoder:${RESET}"
+    echo -e "   ${CYAN}./run.sh${RESET}"
+    echo -e "${WHITE}2. Or manually:${RESET}"
+    echo -e "   ${CYAN}source venv/bin/activate${RESET}"
+    echo -e "   ${CYAN}python xpro_decoder.py${RESET}"
+    
+    echo -e "\n${YELLOW}🔧 MAINTENANCE COMMANDS:${RESET}"
+    echo -e "${WHITE}• Update decoder:${RESET} ${CYAN}./update.sh${RESET}"
+    echo -e "${WHITE}• Test installation:${RESET} ${CYAN}./test_decoder.sh${RESET}"
+    echo -e "${WHITE}• Uninstall:${RESET} ${CYAN}./uninstall.sh${RESET}"
+    
+    echo -e "\n${BLUE}📚 DOCUMENTATION:${RESET}"
+    echo -e "${WHITE}• Examples:${RESET} ${CYAN}examples/README.md${RESET}"
+    echo -e "${WHITE}• GitHub:${RESET} ${CYAN}https://github.com/xpro-nexus/marshal-decoder${RESET}"
+    
+    echo -e "\n${GREEN}🎯 TIP: The decoder works even without external decompilers!${RESET}"
+    echo -e "${WHITE}   Built-in bytecode analysis always works.${RESET}"
+}
+
+# Main installation process
+main() {
+    echo -e "${BOLD}XPRO NEXUS DECODER - Complete Installation${RESET}"
+    echo -e "${WHITE}================================================${RESET}"
+    
+    detect_system
+    install_system_deps
+    create_requirements
+    setup_venv
+    install_python_packages
+    configure_decoder
+    post_install
+    show_summary
+    
+    # Run quick test
+    echo -e "\n${CYAN}[*] Running quick test...${RESET}"
+    ./test_decoder.sh
+}
+
+# Handle command line arguments
+case "${1:-}" in
+    "--help"|"-h")
+        echo "Usage: ./install.sh [OPTION]"
+        echo ""
+        echo "Options:"
+        echo "  (no option)   Run complete installation"
+        echo "  --minimal     Minimal installation (core packages only)"
+        echo "  --update      Update existing installation"
+        echo "  --test        Test installation only"
+        echo "  --help        Show this help"
+        ;;
+    "--minimal")
+        echo "Running minimal installation..."
+        detect_system
+        setup_venv
+        pip install numpy colorama tqdm
+        chmod +x xpro_decoder.py
+        echo "Minimal installation complete!"
+        ;;
+    "--update")
+        if [[ -f "update.sh" ]]; then
+            ./update.sh
+        else
+            echo "Update script not found. Running normal installation..."
+            main
+        fi
+        ;;
+    "--test")
+        if [[ -f "test_decoder.sh" ]]; then
+            ./test_decoder.sh
+        else
+            echo "Test script not found."
+        fi
+        ;;
+    *)
+        main
+        ;;
+esac
+
+exit 0
