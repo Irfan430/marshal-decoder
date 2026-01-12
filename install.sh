@@ -1,6 +1,6 @@
 #!/bin/bash
 # XPRO NEXUS DECODER - INSTALLATION SCRIPT
-# For Kali Linux, Ubuntu, Debian, and other Linux distributions
+# Optimized for Kali Linux, Ubuntu, Debian, and other Linux distributions
 
 set -e
 
@@ -26,6 +26,7 @@ echo "║        ██╔╝ ██╗██║     ╚██████╔╝
 echo "║        ╚═╝  ╚═╝╚═╝      ╚═════╝     ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ║"
 echo "╠══════════════════════════════════════════════════════════════╣"
 echo "║                 XPRO NEXUS DECODER INSTALLER                 ║"
+echo "║              Optimized for Kali Linux Python 3.13            ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo -e "${RESET}"
 
@@ -58,11 +59,64 @@ detect_os() {
     echo -e "${BLUE}[*] Detected: $OS $VER${RESET}"
 }
 
+# Check Python version
+check_python_version() {
+    echo -e "\n${CYAN}[*] Checking Python version...${RESET}"
+    
+    if command -v python3 &> /dev/null; then
+        PYTHON_VERSION=$(python3 --version | cut -d' ' -f2)
+        echo -e "${GREEN}[+] Python $PYTHON_VERSION detected${RESET}"
+        
+        # Check if Python 3.7 or higher
+        MAJOR_VERSION=$(echo $PYTHON_VERSION | cut -d'.' -f1)
+        MINOR_VERSION=$(echo $PYTHON_VERSION | cut -d'.' -f2)
+        
+        if [[ $MAJOR_VERSION -lt 3 ]] || [[ $MAJOR_VERSION -eq 3 && $MINOR_VERSION -lt 7 ]]; then
+            echo -e "${RED}[✗] Python 3.7 or higher is required${RESET}"
+            echo -e "${YELLOW}[!] Please upgrade Python and try again${RESET}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}[✗] Python3 not found${RESET}"
+        exit 1
+    fi
+}
+
 # Install dependencies based on OS
 install_dependencies() {
     echo -e "\n${CYAN}[*] Installing system dependencies...${RESET}"
     
-    if [[ "$OS" == *"Kali"* ]] || [[ "$OS" == *"Debian"* ]] || [[ "$OS" == *"Ubuntu"* ]]; then
+    if [[ "$OS" == *"Kali"* ]]; then
+        echo -e "${YELLOW}[!] Kali Linux detected - Using special mode${RESET}"
+        echo -e "${WHITE}[*] Installing system packages...${RESET}"
+        
+        sudo apt update
+        sudo apt install -y \
+            python3 \
+            python3-pip \
+            python3-dev \
+            python3-venv \
+            python3-wheel \
+            build-essential \
+            git \
+            wget \
+            curl \
+            libssl-dev \
+            libffi-dev
+        
+        # Kali Linux specific fix for Python packages
+        echo -e "${WHITE}[*] Configuring pip for Kali Linux...${RESET}"
+        
+        # Create pip config for --break-system-packages
+        mkdir -p ~/.config/pip
+        cat > ~/.config/pip/pip.conf << EOF
+[global]
+break-system-packages = true
+EOF
+        
+        echo -e "${GREEN}[+] Kali Linux configuration applied${RESET}"
+        
+    elif [[ "$OS" == *"Debian"* ]] || [[ "$OS" == *"Ubuntu"* ]]; then
         sudo apt update
         sudo apt install -y \
             python3 \
@@ -76,9 +130,7 @@ install_dependencies() {
             libffi-dev \
             python3-venv \
             python3-wheel \
-            pkg-config \
-            libjpeg-dev \
-            zlib1g-dev
+            pkg-config
         
     elif [[ "$OS" == *"Fedora"* ]] || [[ "$OS" == *"Red Hat"* ]] || [[ "$OS" == *"CentOS"* ]]; then
         sudo dnf install -y \
@@ -117,20 +169,34 @@ setup_venv() {
     
     # Check if venv exists
     if [[ ! -d "venv" ]]; then
+        echo -e "${WHITE}[*] Creating virtual environment...${RESET}"
         python3 -m venv venv
         echo -e "${GREEN}[+] Virtual environment created${RESET}"
     else
         echo -e "${YELLOW}[!] Virtual environment already exists${RESET}"
+        read -p "Recreate virtual environment? (y/N): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo -e "${WHITE}[*] Removing old virtual environment...${RESET}"
+            rm -rf venv
+            python3 -m venv venv
+            echo -e "${GREEN}[+] Virtual environment recreated${RESET}"
+        fi
     fi
     
     # Activate venv
     source venv/bin/activate
     
     # Upgrade pip
+    echo -e "${WHITE}[*] Upgrading pip...${RESET}"
     pip install --upgrade pip setuptools wheel
+    
+    # Check pip version
+    PIP_VERSION=$(pip --version | awk '{print $2}')
+    echo -e "${GREEN}[+] Using pip $PIP_VERSION${RESET}"
 }
 
-# Install Python packages
+# Install Python packages with Kali Linux compatibility
 install_python_packages() {
     echo -e "\n${CYAN}[*] Installing Python packages...${RESET}"
     
@@ -160,17 +226,46 @@ flake8>=6.0.0
 pytest>=7.0.0
 EOF
     
-    # Install packages
-    echo -e "${BLUE}[*] Installing from requirements.txt...${RESET}"
-    pip install -r requirements.txt
+    # Determine installation method based on OS
+    if [[ "$OS" == *"Kali"* ]]; then
+        echo -e "${YELLOW}[!] Kali Linux detected - Using --break-system-packages flag${RESET}"
+        echo -e "${WHITE}[*] Installing packages...${RESET}"
+        
+        # Install packages with Kali Linux compatibility
+        pip install -r requirements.txt --break-system-packages
+        
+        # Check for successful installation
+        for pkg in uncompyle6 decompyle3 numpy; do
+            if python3 -c "import $pkg" &>/dev/null; then
+                echo -e "${GREEN}[✓] $pkg installed successfully${RESET}"
+            else
+                echo -e "${RED}[✗] $pkg installation failed${RESET}"
+            fi
+        done
+        
+    else
+        # Normal installation for other OS
+        echo -e "${BLUE}[*] Installing from requirements.txt...${RESET}"
+        pip install -r requirements.txt
+    fi
     
     # Install optional AI packages
-    echo -e "\n${CYAN}[*] Installing optional AI packages...${RESET}"
-    read -p "Install AI/ML packages? (y/N): " -n 1 -r
+    echo -e "\n${CYAN}[*] Optional AI/ML packages...${RESET}"
+    read -p "Install advanced AI packages (PyTorch/TensorFlow)? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-        pip install tensorflow
+        if [[ "$OS" == *"Kali"* ]]; then
+            # Kali Linux compatible installation
+            echo -e "${WHITE}[*] Installing PyTorch for CPU...${RESET}"
+            pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu --break-system-packages
+            
+            echo -e "${WHITE}[*] Installing TensorFlow...${RESET}"
+            pip install tensorflow --break-system-packages
+        else
+            # Normal installation
+            pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+            pip install tensorflow
+        fi
         echo -e "${GREEN}[+] AI packages installed${RESET}"
     fi
 }
@@ -180,7 +275,14 @@ configure_decoder() {
     echo -e "\n${CYAN}[*] Configuring XPRO Decoder...${RESET}"
     
     # Make main script executable
-    chmod +x xpro_decoder.py
+    if [[ -f "xpro_decoder.py" ]]; then
+        chmod +x xpro_decoder.py
+        echo -e "${GREEN}[+] Main script made executable${RESET}"
+    else
+        echo -e "${RED}[✗] Main script not found${RESET}"
+        echo -e "${YELLOW}[!] Please make sure xpro_decoder.py is in the current directory${RESET}"
+        exit 1
+    fi
     
     # Create config file
     cat > config.json << 'EOF'
@@ -193,7 +295,8 @@ configure_decoder() {
     "output_dir": "XPRO_OUTPUT",
     "enable_ai": true,
     "enable_logging": true,
-    "backup_files": true
+    "backup_files": true,
+    "kali_mode": true
 }
 EOF
     
@@ -205,12 +308,55 @@ import marshal
 exec(marshal.loads(b'\xe3\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\xf3\x10\x00\x00\x00\x97\x00d\x00\x83\x01Z\x00d\x01S\x00)\x02N\xe9\x01\x00\x00\x00)\x01\xda\x05print\xa9\x00r\x03\x00\x00\x00r\x03\x00\x00\x00\xfa\x08<module>\xda\x08<module>\x01\x00\x00\x00\xf3\x00\x00\x00\x00'))
 EOF
     
+    # Create run script
+    cat > run.sh << 'EOF'
+#!/bin/bash
+# XPRO NEXUS DECODER - Run Script
+
+# Colors
+RED='\033[0;91m'
+GREEN='\033[0;92m'
+YELLOW='\033[0;93m'
+CYAN='\033[0;96m'
+RESET='\033[0m'
+
+echo -e "${CYAN}"
+echo "╔══════════════════════════════════════════════════════╗"
+echo "║             XPRO NEXUS DECODER v10.0                ║"
+echo "╚══════════════════════════════════════════════════════╝"
+echo -e "${RESET}"
+
+# Check if virtual environment exists
+if [[ -d "venv" ]]; then
+    echo -e "${GREEN}[*] Activating virtual environment...${RESET}"
+    source venv/bin/activate
+else
+    echo -e "${YELLOW}[!] Virtual environment not found${RESET}"
+    echo -e "${CYAN}[*] Using system Python${RESET}"
+fi
+
+# Run the decoder
+python3 xpro_decoder.py
+
+# Deactivate venv if it was activated
+if [[ -d "venv" ]]; then
+    deactivate 2>/dev/null
+fi
+EOF
+    chmod +x run.sh
+    
     echo -e "${GREEN}[+] Configuration complete${RESET}"
 }
 
 # Test installation
 test_installation() {
     echo -e "\n${CYAN}[*] Testing installation...${RESET}"
+    
+    # Activate virtual environment
+    if [[ -d "venv" ]]; then
+        source venv/bin/activate
+        IN_VENV=true
+    fi
     
     # Test Python
     if python3 --version; then
@@ -223,21 +369,45 @@ test_installation() {
     # Test main script
     if [[ -f "xpro_decoder.py" ]]; then
         echo -e "${GREEN}[✓] Main script found${RESET}"
+        
+        # Quick syntax check
+        if python3 -m py_compile xpro_decoder.py 2>/dev/null; then
+            echo -e "${GREEN}[✓] Main script syntax is valid${RESET}"
+            rm -f __pycache__/*.pyc 2>/dev/null
+            rmdir __pycache__ 2>/dev/null
+        else
+            echo -e "${YELLOW}[!] Syntax check warning${RESET}"
+        fi
     else
         echo -e "${RED}[✗] Main script not found${RESET}"
         exit 1
     fi
     
-    # Quick functionality test
-    echo -e "\n${BLUE}[*] Running quick test...${RESET}"
-    timeout 5 python3 -c "import marshal, uncompyle6; print('✓ All imports successful')" && \
-    echo -e "${GREEN}[✓] Basic functionality test passed${RESET}" || \
-    echo -e "${YELLOW}[!] Some imports failed (may need manual installation)${RESET}"
+    # Test core dependencies
+    echo -e "\n${WHITE}[*] Testing core dependencies...${RESET}"
+    
+    REQUIRED_PACKAGES=("marshal" "uncompyle6" "decompyle3" "numpy")
+    
+    for pkg in "${REQUIRED_PACKAGES[@]}"; do
+        if python3 -c "import $pkg" &>/dev/null; then
+            echo -e "${GREEN}[✓] $pkg import successful${RESET}"
+        else
+            echo -e "${YELLOW}[!] $pkg import failed${RESET}"
+        fi
+    done
+    
+    # Deactivate venv if activated
+    if [[ "$IN_VENV" = true ]]; then
+        deactivate
+    fi
+    
+    echo -e "\n${GREEN}[✅] Installation test completed${RESET}"
 }
 
 # Main installation function
 main_install() {
     detect_os
+    check_python_version
     install_dependencies
     setup_venv
     install_python_packages
@@ -249,30 +419,69 @@ main_install() {
     echo -e "${GREEN}========================================${RESET}"
     
     echo -e "\n${CYAN}📦 Installation Summary:${RESET}"
-    echo -e "${WHITE}• Python virtual environment: ${GREEN}venv/${RESET}"
+    echo -e "${WHITE}• Operating System: ${GREEN}$OS $VER${RESET}"
+    echo -e "${WHITE}• Python Version: ${GREEN}$PYTHON_VERSION${RESET}"
+    echo -e "${WHITE}• Virtual Environment: ${GREEN}venv/${RESET}"
     echo -e "${WHITE}• Main decoder script: ${GREEN}xpro_decoder.py${RESET}"
     echo -e "${WHITE}• Configuration: ${GREEN}config.json${RESET}"
+    echo -e "${WHITE}• Run script: ${GREEN}run.sh${RESET}"
     echo -e "${WHITE}• Examples: ${GREEN}examples/${RESET}"
     
-    echo -e "\n${MAGENTA}🚀 Quick Start:${RESET}"
-    echo -e "${WHITE}1. Activate virtual environment:${RESET}"
+    echo -e "\n${MAGENTA}🚀 Quick Start Commands:${RESET}"
+    echo -e "${WHITE}1. Run with virtual environment:${RESET}"
+    echo -e "   ${CYAN}./run.sh${RESET}"
+    echo -e "${WHITE}2. Or manually:${RESET}"
     echo -e "   ${CYAN}source venv/bin/activate${RESET}"
-    echo -e "${WHITE}2. Run the decoder:${RESET}"
     echo -e "   ${CYAN}python3 xpro_decoder.py${RESET}"
-    echo -e "${WHITE}3. Follow the interactive prompts${RESET}"
+    echo -e "   ${CYAN}deactivate${RESET}"
     
-    echo -e "\n${YELLOW}💡 Tip:${RESET} Run ${CYAN}./install.sh update${RESET} to update the decoder"
+    echo -e "\n${YELLOW}💡 Tips for Kali Linux:${RESET}"
+    echo -e "${WHITE}• If you get 'externally-managed-environment' error:${RESET}"
+    echo -e "  ${CYAN}Use ./run.sh or activate venv first${RESET}"
+    echo -e "${WHITE}• To update packages:${RESET}"
+    echo -e "  ${CYAN}source venv/bin/activate && pip install --upgrade -r requirements.txt${RESET}"
     
     # Create update script
     cat > update.sh << 'EOF'
 #!/bin/bash
 # Update script for XPRO NEXUS Decoder
 
-echo "Updating XPRO NEXUS Decoder..."
-git pull origin main
-source venv/bin/activate
-pip install --upgrade -r requirements.txt
-echo "Update complete!"
+RED='\033[0;91m'
+GREEN='\033[0;92m'
+YELLOW='\033[0;93m'
+CYAN='\033[0;96m'
+RESET='\033[0m'
+
+echo -e "${CYAN}[*] Updating XPRO NEXUS Decoder...${RESET}"
+
+# Update from git if available
+if [[ -d ".git" ]]; then
+    echo -e "${CYAN}[*] Pulling latest changes from Git...${RESET}"
+    git pull origin main
+else
+    echo -e "${YELLOW}[!] Not a git repository - skipping Git update${RESET}"
+fi
+
+# Update Python packages
+if [[ -d "venv" ]]; then
+    source venv/bin/activate
+    
+    echo -e "${CYAN}[*] Updating Python packages...${RESET}"
+    
+    # Check if Kali Linux
+    if [[ -f /etc/os-release ]] && grep -q "Kali" /etc/os-release; then
+        echo -e "${YELLOW}[!] Kali Linux detected - using special mode${RESET}"
+        pip install --upgrade -r requirements.txt --break-system-packages
+    else
+        pip install --upgrade -r requirements.txt
+    fi
+    
+    deactivate
+    echo -e "${GREEN}[+] Update complete!${RESET}"
+else
+    echo -e "${RED}[✗] Virtual environment not found${RESET}"
+    echo -e "${YELLOW}[!] Please run the installer again${RESET}"
+fi
 EOF
     chmod +x update.sh
 }
@@ -281,16 +490,23 @@ EOF
 update_decoder() {
     echo -e "${CYAN}[*] Updating XPRO NEXUS Decoder...${RESET}"
     
-    if [[ -d ".git" ]]; then
-        git pull origin main
+    if [[ -d "venv" ]]; then
+        source venv/bin/activate
+        
+        if [[ -f /etc/os-release ]] && grep -q "Kali" /etc/os-release; then
+            echo -e "${YELLOW}[!] Kali Linux detected - using --break-system-packages${RESET}"
+            pip install --upgrade -r requirements.txt --break-system-packages
+        else
+            pip install --upgrade -r requirements.txt
+        fi
+        
+        deactivate
+        echo -e "${GREEN}[+] Update complete${RESET}"
     else
-        echo -e "${YELLOW}[!] Not a git repository${RESET}"
+        echo -e "${RED}[✗] Virtual environment not found${RESET}"
+        echo -e "${YELLOW}[!] Please run the installer first${RESET}"
+        exit 1
     fi
-    
-    source venv/bin/activate
-    pip install --upgrade -r requirements.txt
-    
-    echo -e "${GREEN}[+] Update complete${RESET}"
 }
 
 # Uninstall function
@@ -299,10 +515,40 @@ uninstall_decoder() {
     read -p "Are you sure? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo -e "${WHITE}[*] Removing virtual environment...${RESET}"
         rm -rf venv
+        
+        echo -e "${WHITE}[*] Removing configuration files...${RESET}"
         rm -f requirements.txt config.json
-        echo -e "${GREEN}[+] Uninstalled${RESET}"
+        
+        echo -e "${WHITE}[*] Removing scripts...${RESET}"
+        rm -f run.sh update.sh
+        
+        echo -e "${WHITE}[*] Cleaning up...${RESET}"
+        rm -rf __pycache__ *.pyc
+        
+        echo -e "${GREEN}[+] XPRO NEXUS Decoder has been uninstalled${RESET}"
     fi
+}
+
+# Help function
+show_help() {
+    echo -e "${CYAN}XPRO NEXUS DECODER - Installer Script${RESET}"
+    echo ""
+    echo "Usage: ./install.sh [OPTION]"
+    echo ""
+    echo "Options:"
+    echo "  (no option)   Run full installation"
+    echo "  update        Update installed packages"
+    echo "  uninstall     Remove XPRO NEXUS Decoder"
+    echo "  test          Test the installation"
+    echo "  help          Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  ./install.sh          # Full installation"
+    echo "  ./install.sh update   # Update packages"
+    echo "  ./install.sh test     # Test installation"
+    echo ""
 }
 
 # Handle arguments
@@ -315,6 +561,9 @@ case "$1" in
         ;;
     "test")
         test_installation
+        ;;
+    "help"|"-h"|"--help")
+        show_help
         ;;
     *)
         main_install
