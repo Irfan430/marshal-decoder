@@ -41,6 +41,84 @@ from typing import Dict, List, Optional, Tuple, Any, Union
 import logging
 import warnings
 
+# ==================== KALI LINUX COMPATIBILITY FIX ====================
+def check_and_install_dependencies():
+    """Check and install required dependencies for Kali Linux"""
+    print("\n🔍 Checking dependencies for Kali Linux...")
+    
+    required_packages = [
+        ('uncompyle6', 'uncompyle6'),
+        ('decompyle3', 'decompyle3'),
+        ('numpy', 'numpy')
+    ]
+    
+    installed = []
+    missing = []
+    
+    for import_name, pkg_name in required_packages:
+        try:
+            __import__(import_name)
+            installed.append(pkg_name)
+            print(f"  ✓ {pkg_name} already installed")
+        except ImportError:
+            missing.append(pkg_name)
+            print(f"  ✗ {pkg_name} missing")
+    
+    if missing:
+        print(f"\n📦 Installing {len(missing)} missing packages...")
+        
+        # Try different installation methods
+        for pkg in missing:
+            success = False
+            
+            # Method 1: Try with --break-system-packages
+            print(f"  Installing {pkg}...", end=" ")
+            try:
+                result = subprocess.run(
+                    [sys.executable, "-m", "pip", "install", pkg, 
+                     "--break-system-packages", "-q"],
+                    capture_output=True,
+                    text=True,
+                    timeout=60
+                )
+                if result.returncode == 0:
+                    print("✓ Success")
+                    success = True
+                else:
+                    print("✗ Failed")
+            except:
+                print("✗ Error")
+            
+            # Method 2: Try without --break-system-packages for older pip
+            if not success:
+                print(f"  Trying alternative method for {pkg}...", end=" ")
+                try:
+                    result = subprocess.run(
+                        [sys.executable, "-m", "pip", "install", pkg, "-q", 
+                         "--user"],
+                        capture_output=True,
+                        text=True,
+                        timeout=60
+                    )
+                    if result.returncode == 0:
+                        print("✓ Success (user install)")
+                        success = True
+                    else:
+                        print("✗ Failed")
+                except:
+                    print("✗ Error")
+            
+            # Method 3: Suggest manual installation
+            if not success:
+                print(f"\n  ⚠️  Could not auto-install {pkg}")
+                print(f"  Please install manually:")
+                print(f"    sudo apt install python3-{pkg}")
+                print(f"    OR")
+                print(f"    pip install {pkg} --break-system-packages")
+    
+    print("\n" + "="*50)
+    return len(missing) == 0
+
 # Try to import AI modules (optional)
 try:
     import numpy as np
@@ -348,6 +426,8 @@ class XproDecoder:
         
         if AI_CAPABLE:
             methods.append(self.decode_ai)
+        else:
+            self.logger.warning("AI decoding disabled (numpy not available)")
         
         results = {}
         
@@ -593,6 +673,55 @@ if __name__ == "__main__":
 """
         return template
     
+    def install_package(self, package_name):
+        """Auto-install missing packages with Kali Linux compatibility"""
+        print(f"\n{TerminalUI.color(f'Installing {package_name}...', 'YELLOW')}")
+        
+        # Try multiple installation methods for Kali Linux
+        methods = [
+            [sys.executable, "-m", "pip", "install", package_name, 
+             "--break-system-packages", "-q"],
+            [sys.executable, "-m", "pip", "install", package_name, 
+             "--user", "-q"],
+            ["sudo", sys.executable, "-m", "pip", "install", package_name, "-q"]
+        ]
+        
+        for method in methods:
+            try:
+                result = subprocess.run(
+                    method,
+                    capture_output=True,
+                    text=True,
+                    timeout=30
+                )
+                
+                if result.returncode == 0:
+                    print(f"{TerminalUI.color(f'✓ {package_name} installed', 'GREEN')}")
+                    
+                    # Reload module if needed
+                    if package_name == 'numpy':
+                        global np, AI_CAPABLE
+                        try:
+                            import numpy as np
+                            AI_CAPABLE = True
+                            print(f"{TerminalUI.color('✓ AI module activated', 'CYAN')}")
+                        except:
+                            pass
+                    
+                    return True
+                    
+            except Exception as e:
+                continue
+        
+        # If all methods fail, show manual instructions
+        print(f"{TerminalUI.color(f'✗ Failed to install {package_name}', 'RED')}")
+        print(f"{TerminalUI.color('Manual installation:', 'YELLOW')}")
+        print(f"  sudo apt install python3-{package_name}")
+        print(f"  OR")
+        print(f"  pip install {package_name} --break-system-packages")
+        
+        return False
+    
     def save_results(self, results):
         """Save all decoding results"""
         self.logger.info(f"Saving {len(results)} results...")
@@ -655,17 +784,6 @@ XPRO NEXUS v{Config.VERSION}
         
         self.logger.info(f"Report saved: {report_file}")
         return report_file
-    
-    def install_package(self, package_name):
-        """Auto-install missing packages"""
-        print(f"\n{TerminalUI.color(f'Installing {package_name}...', 'YELLOW')}")
-        try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", package_name, "-q"])
-            print(f"{TerminalUI.color(f'✓ {package_name} installed', 'GREEN')}")
-            return True
-        except Exception as e:
-            print(f"{TerminalUI.color(f'✗ Failed to install {package_name}: {e}', 'RED')}")
-            return False
     
     def run_decoder(self):
         """Main decoder execution flow"""
@@ -748,6 +866,12 @@ XPRO NEXUS v{Config.VERSION}
 
 # ==================== MAIN EXECUTION ====================
 def main():
+    # First check and install dependencies
+    if not check_and_install_dependencies():
+        print("\n⚠️  Some dependencies may not be installed properly.")
+        print("   The decoder will run with limited functionality.")
+        input("\nPress Enter to continue...")
+    
     # Check Python version
     if sys.version_info < (3, 7):
         print(f"{TerminalUI.color('[ERROR] Python 3.7+ required', 'RED')}")
@@ -760,6 +884,14 @@ def main():
     
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
+    
+    # Show banner
+    TerminalUI.clear_screen()
+    TerminalUI.print_banner()
+    
+    print(f"\n{TerminalUI.color('[KALI LINUX MODE]', 'MAGENTA')}")
+    print(f"{TerminalUI.color('Decoder optimized for Kali Linux Python 3.13', 'CYAN')}")
+    print(f"{TerminalUI.color('Auto-dependency installation enabled', 'GREEN')}")
     
     # Run decoder
     decoder = XproDecoder()
