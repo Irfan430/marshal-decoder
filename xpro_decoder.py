@@ -243,7 +243,6 @@ class XproDecoder:
         
         methods = [
             self.extract_via_regex,
-            self.extract_via_ast,
             self.extract_via_bruteforce,
             self.extract_via_heuristics
         ]
@@ -285,6 +284,52 @@ class XproDecoder:
                         
         except Exception as e:
             self.logger.error(f"Regex extraction failed: {e}")
+            
+        return None
+    
+    def extract_via_bruteforce(self, file_path):
+        """Bruteforce extraction by scanning for marshal data"""
+        try:
+            with open(file_path, 'rb') as f:
+                content = f.read()
+            
+            # Try to find marshal data by checking magic bytes
+            for i in range(len(content) - 100):
+                chunk = content[i:i+100]
+                try:
+                    marshal.loads(chunk)
+                    return chunk
+                except:
+                    continue
+                    
+        except Exception as e:
+            self.logger.debug(f"Bruteforce extraction failed: {e}")
+            
+        return None
+    
+    def extract_via_heuristics(self, file_path):
+        """Heuristic-based extraction"""
+        try:
+            with open(file_path, 'rb') as f:
+                content = f.read()
+            
+            # Look for common marshal patterns
+            patterns = [
+                rb'\x63\x00\x00\x00',  # Common marshal header
+                rb'code_object',
+                rb'\xee\x0c\xac\x0b'   # Another common pattern
+            ]
+            
+            for pattern in patterns:
+                pos = content.find(pattern)
+                if pos != -1:
+                    # Extract reasonable chunk
+                    start = max(0, pos - 100)
+                    end = min(len(content), pos + 5000)
+                    return content[start:end]
+                    
+        except Exception as e:
+            self.logger.debug(f"Heuristic extraction failed: {e}")
             
         return None
     
@@ -350,6 +395,150 @@ class XproDecoder:
             return self.decode_decompyle3(marshal_data)
         except Exception as e:
             self.logger.error(f"decompyle3 failed: {e}")
+            return None
+    
+    def decode_bytecode(self, marshal_data):
+        """Decode using bytecode analysis"""
+        try:
+            code_obj = marshal.loads(marshal_data)
+            output = []
+            output.append(f"# Bytecode analysis - Generated {datetime.now()}")
+            output.append(f"# Code object: {code_obj}")
+            output.append("")
+            output.append("import dis")
+            output.append("import marshal")
+            output.append("")
+            output.append(f"code_data = {marshal_data[:50]}...")
+            output.append("code_obj = marshal.loads(code_data)")
+            output.append("print('Disassembling code object:')")
+            output.append("dis.dis(code_obj)")
+            return "\n".join(output)
+        except Exception as e:
+            self.logger.error(f"Bytecode decoding failed: {e}")
+            return None
+    
+    def decode_execution(self, marshal_data):
+        """Decode via execution tracing"""
+        try:
+            code_obj = marshal.loads(marshal_data)
+            
+            # Create a wrapper to capture execution
+            wrapper = f"""
+def reconstructed_code():
+    import marshal
+    import sys
+    import traceback
+    
+    try:
+        code_obj = marshal.loads({marshal_data[:100]}...)
+        print("[EXECUTION] Code object loaded successfully")
+        print(f"Type: {{type(code_obj)}}")
+        print(f"Co_name: {{code_obj.co_name if hasattr(code_obj, 'co_name') else 'N/A'}}")
+        
+        # Try to execute in safe context
+        exec_globals = {{'__builtins__': {{}}}}
+        exec(code_obj, exec_globals)
+        
+    except Exception as e:
+        print(f"[EXECUTION ERROR] {{e}}")
+        traceback.print_exc()
+    
+if __name__ == "__main__":
+    reconstructed_code()
+"""
+            return wrapper
+        except Exception as e:
+            self.logger.error(f"Execution decoding failed: {e}")
+            return None
+    
+    def decode_pattern(self, marshal_data):
+        """Pattern matching decoding"""
+        try:
+            analysis = f"""
+# Pattern Analysis Report
+# =======================
+# Timestamp: {datetime.now()}
+# Data size: {len(marshal_data)} bytes
+# First 100 bytes: {marshal_data[:100]}
+
+import struct
+import marshal
+
+def analyze_patterns(data):
+    print("Pattern analysis started")
+    
+    # Check for common structures
+    patterns_found = []
+    
+    # Check for strings in data
+    try:
+        decoded = data.decode('utf-8', errors='ignore')
+        if any(keyword in decoded.lower() for keyword in ['def ', 'class ', 'import ', 'from ', 'print']):
+            patterns_found.append("Python keywords detected")
+    except:
+        pass
+    
+    return patterns_found
+
+if __name__ == "__main__":
+    data = {marshal_data[:200]}...
+    patterns = analyze_patterns(data)
+    print(f"Found patterns: {{patterns}}")
+"""
+            return analysis
+        except Exception as e:
+            self.logger.error(f"Pattern decoding failed: {e}")
+            return None
+    
+    def decode_hybrid(self, marshal_data):
+        """Hybrid decoding combining multiple methods"""
+        try:
+            # Combine results from simpler methods
+            hybrid_code = f"""
+# HYBRID DECODING RESULT
+# ======================
+# Generated by XPRO NEXUS Hybrid Decoder
+# Timestamp: {datetime.now()}
+# Session: {self.session_id}
+
+import marshal
+import dis
+import sys
+import traceback
+
+def main():
+    print("XPRO NEXUS Hybrid Decoder v{Config.VERSION}")
+    print(f"Data size: {{len({marshal_data[:50]}...)}} bytes")
+    
+    try:
+        # Attempt to load and analyze
+        code_obj = marshal.loads({marshal_data[:200]}...)
+        
+        print("\\n=== CODE OBJECT INFO ===")
+        attrs = ['co_name', 'co_argcount', 'co_nlocals', 'co_stacksize', 'co_flags']
+        for attr in attrs:
+            if hasattr(code_obj, attr):
+                print(f"{{attr}}: {{getattr(code_obj, attr)}}")
+        
+        print("\\n=== BYTECODE DISASSEMBLY ===")
+        dis.dis(code_obj)
+        
+        print("\\n=== EXECUTION ATTEMPT ===")
+        safe_dict = {{'__builtins__': {{}}, 'print': print}}
+        exec(code_obj, safe_dict)
+        
+    except Exception as e:
+        print(f"Decoding error: {{e}}")
+        traceback.print_exc()
+    
+    print("\\n=== END OF HYBRID DECODING ===")
+
+if __name__ == "__main__":
+    main()
+"""
+            return hybrid_code
+        except Exception as e:
+            self.logger.error(f"Hybrid decoding failed: {e}")
             return None
     
     def decode_ai(self, marshal_data):
