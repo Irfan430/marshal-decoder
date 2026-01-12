@@ -1,110 +1,153 @@
 
-# XPRO NEXUS DECODER – MASTER ZERO-ERROR EDITION
+<div align="center">
 
-**Author:** IRFAN  
-**Platform:** Kali Linux / Linux  
-**Framework Type:** Python Marshal Decryption & Recovery  
+# 🧠⚡ **XPRO NEXUS DECODER** ⚡🧠  
+### **MASTER • ZERO-ERROR • AI POWER EDITION**
+
+```
+██████╗ ██╗  ██╗██████╗ ██████╗ 
+██╔══██╗██║  ██║██╔══██╗██╔══██╗
+██████╔╝███████║██████╔╝██████╔╝
+██╔═══╝ ██╔══██║██╔═══╝ ██╔══██╗
+██║     ██║  ██║██║     ██║  ██║
+╚═╝     ╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝
+
+XPRO NEXUS DECODER – MASTER FRAMEWORK
+Author  : IRFAN
+Platform: Kali Linux
+Build   : POWER • AI • ZERO-ERROR
+```
+
+</div>
 
 ---
 
-## 🔥 What This Tool Does
+## 🧬 FRAMEWORK BASE (CORE DNA)
 
-XPRO NEXUS DECODER is a **high‑power Python marshal decoding framework**
-used to recover Python source logic from scripts encrypted or obfuscated using:
+> **XPRO NEXUS** is not a script —  
+> it is a **reverse‑engineering framework** engineered for  
+> **marshal‑encrypted Python recovery**.
 
-```python
-marshal.dumps(...)
-exec(marshal.loads(...))
+This framework is designed with a **multi‑layered decode architecture**:
+
 ```
-
-This MASTER edition focuses on:
-- Maximum decoding power
-- Zero runtime errors
-- Clean single‑file output
+[ Input File ]
+      ↓
+[ Extractor Engine ]
+  ├─ AST Extractor
+  ├─ Heuristic Extractor
+  ├─ Bruteforce Extractor
+      ↓
+[ Decode Core ]
+  ├─ Bytecode Decode
+  ├─ Hybrid Decode
+  ├─ AI‑Assisted Decode
+      ↓
+[ Reconstruction Engine ]
+      ↓
+[ Clean Decoded Output ]
+```
 
 ---
 
-## ⚙️ Supported Decode Capabilities
+## ⚙️ CORE CAPABILITIES
 
-- Marshal bytecode extraction
-- AST, heuristic, bruteforce extraction paths
-- AI‑assisted reconstruction from bytecode
-- Automatic decode path selection
-- Python 3.9 – 3.11 compatibility
-- Kali Linux optimized
-
----
-
-## 📂 Output Behavior (IMPORTANT)
-
-Only **ONE decoded file** is generated.
-
-Output location:
-```
-~/Downloads
-```
-
-Output filename:
-```
-<original_filename>_DECODED.py
-```
-
-No logs, no reports, no clutter.
+✔ Marshal bytecode extraction  
+✔ AI‑assisted decode decision engine  
+✔ Multi‑path decoding with zero crash  
+✔ Handles heavy obfuscation  
+✔ Kali Linux optimized  
+✔ One‑click decode execution  
 
 ---
 
-## ▶️ How To Use (STEP‑BY‑STEP)
+## 🧠 AI POWER LAYER
 
-### 1️⃣ Extract the tool
+The **AI CORE** analyzes:
+
+- Byte entropy
+- Structure consistency
+- Execution patterns
+- Decode success probability
+
+This allows **automatic path selection** without manual tuning.
+
+> _AI here is not marketing — it is a decision engine._
+
+---
+
+## 📂 OUTPUT DESIGN (NO CLUTTER)
+
+Only **ONE output file** is generated.
+
+```
+~/Downloads/<original_filename>_DECODED.py
+```
+
+No logs.  
+No raw dumps.  
+No noise.
+
+You take the data and move on.
+
+---
+
+## ▶️ USAGE (OPERATOR MODE)
+
+### Step 1 — Deploy
 ```bash
-unzip XPRO-NEXUS-MASTER-IRFAN-FIXED.zip
+unzip XPRO-NEXUS-MASTER-IRFAN-3D-README.zip
 cd marshal-decoder-main
 ```
 
-### 2️⃣ Run the decoder
+### Step 2 — Execute
 ```bash
 python3 xpro_decoder.py
 ```
 
-### 3️⃣ Enter encrypted file path
-Example:
-```text
+### Step 3 — Target
+```
 /home/kali/Desktop/bran_enc.py
 ```
 
-### 4️⃣ Done
-Decoded file will appear automatically in:
+### Step 4 — Result
 ```
-~/Downloads
+~/Downloads/bran_enc_DECODED.py
 ```
 
 ---
 
-## 🧪 Example Scenario
+## 🧪 REAL‑WORLD SCENARIO
 
-Encrypted file:
-```
-bran_enc.py
-```
-
-Output file:
-```
-bran_enc_DECODED.py
+Encrypted payload:
+```python
+exec(marshal.loads(b'...'))
 ```
 
-You can now:
-- Read logic
-- Modify source
-- Reverse engineer
-- Re‑encrypt if needed
+Recovered output:
+```python
+# Decoded Python source
+def main():
+    ...
+```
 
 ---
 
-## ⚠️ Disclaimer
+## ⚠️ OPERATIONAL NOTICE
 
-This tool is intended for **educational, research, and reverse‑engineering purposes only**.
-The author is not responsible for misuse.
+This framework is intended for:
+
+- Reverse engineering
+- Malware analysis
+- Educational research
+
+**Unauthorized use against third‑party code is your responsibility.**
 
 ---
 
-© IRFAN — XPRO Framework
+<div align="center">
+
+### 🧠⚡ **XPRO FRAMEWORK** ⚡🧠  
+**© IRFAN — MASTER BUILD**
+
+</div>
