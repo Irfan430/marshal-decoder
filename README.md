@@ -1,78 +1,109 @@
 
-# XPRO NEXUS DECODER – MASTER EDITION
+# XPRO NEXUS DECODER – MASTER ZERO-ERROR EDITION
 
 **Author:** IRFAN  
 **Platform:** Kali Linux / Linux  
-**Category:** Python Marshal Decryption & AI-Assisted Recovery Framework
+**Framework Type:** Python Marshal Decryption & Recovery  
 
 ---
 
-## Overview
+## 🔥 What This Tool Does
 
-XPRO NEXUS DECODER is a **professional-grade Python marshal decoding framework**
-designed for reverse engineering, malware analysis, and recovery of
-obfuscated Python scripts.
+XPRO NEXUS DECODER is a **high‑power Python marshal decoding framework**
+used to recover Python source logic from scripts encrypted or obfuscated using:
 
-This MASTER EDITION is optimized for:
-- High power decoding
-- Zero-crash execution
-- Clean single-file output
-- AI-assisted reconstruction
-
----
-
-## Key Capabilities
-
-- Decode Python files encrypted using `marshal.dumps`
-- Automatic detection and extraction of embedded bytecode
-- Multi-path decode engine with intelligent fallback
-- AI-assisted reconstruction from Python bytecode
-- Works even on heavily obfuscated scripts
-- Minimal output: only the decoded file you need
-
----
-
-## Output Behavior
-
-The decoder generates **only one file**:
-
-```
-<original_filename>_DECODED.py
+```python
+marshal.dumps(...)
+exec(marshal.loads(...))
 ```
 
-Saved automatically to:
+This MASTER edition focuses on:
+- Maximum decoding power
+- Zero runtime errors
+- Clean single‑file output
 
+---
+
+## ⚙️ Supported Decode Capabilities
+
+- Marshal bytecode extraction
+- AST, heuristic, bruteforce extraction paths
+- AI‑assisted reconstruction from bytecode
+- Automatic decode path selection
+- Python 3.9 – 3.11 compatibility
+- Kali Linux optimized
+
+---
+
+## 📂 Output Behavior (IMPORTANT)
+
+Only **ONE decoded file** is generated.
+
+Output location:
 ```
 ~/Downloads
 ```
 
-No temporary files. No clutter.
+Output filename:
+```
+<original_filename>_DECODED.py
+```
+
+No logs, no reports, no clutter.
 
 ---
 
-## Usage
+## ▶️ How To Use (STEP‑BY‑STEP)
 
+### 1️⃣ Extract the tool
+```bash
+unzip XPRO-NEXUS-MASTER-IRFAN-FIXED.zip
+cd marshal-decoder-main
+```
+
+### 2️⃣ Run the decoder
 ```bash
 python3 xpro_decoder.py
 ```
 
-Then provide the path to the encrypted Python file when prompted.
+### 3️⃣ Enter encrypted file path
+Example:
+```text
+/home/kali/Desktop/bran_enc.py
+```
+
+### 4️⃣ Done
+Decoded file will appear automatically in:
+```
+~/Downloads
+```
 
 ---
 
-## Intended Use
+## 🧪 Example Scenario
 
-- Reverse engineering
-- Malware analysis
-- Educational research
-- Python bytecode recovery
+Encrypted file:
+```
+bran_enc.py
+```
+
+Output file:
+```
+bran_enc_DECODED.py
+```
+
+You can now:
+- Read logic
+- Modify source
+- Reverse engineer
+- Re‑encrypt if needed
 
 ---
 
-## Disclaimer
+## ⚠️ Disclaimer
 
-This tool is provided for **educational and research purposes only**.
-The author assumes no responsibility for misuse.
+This tool is intended for **educational, research, and reverse‑engineering purposes only**.
+The author is not responsible for misuse.
 
 ---
 
