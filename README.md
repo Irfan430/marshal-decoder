@@ -147,3 +147,13 @@ MIT License - see LICENSE file for details.
 
 </div>
 ```
+
+
+## Usage (Updated)
+
+Run the decoder and provide the encrypted marshal file path when prompted.
+Example:
+
+python3 xpro_decoder.py
+
+Drag & drop also supported.
