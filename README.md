@@ -96,7 +96,7 @@ You take the data and move on.
 
 ### Step 1 — Deploy
 ```bash
-unzip XPRO-NEXUS-MASTER-IRFAN-3D-README.zip
+git clone https://github.com/Irfan430/marshal-decoder
 cd marshal-decoder-main
 ```
 
